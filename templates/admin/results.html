@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Voting Results - Online Voting System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">
+        <i class="bi bi-bar-chart"></i> Voting Results
+    </h2>
+    
+    <!-- Results Summary -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Election Status</h5>
+                </div>
+                <div class="card-body">
+                    {% if election %}
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Election:</strong></td>
+                                <td>{{ election.election_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    {% if election.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Ended</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    {% else %}
+                        <p class="text-muted">No election configured</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Total Votes Cast</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h1 class="display-4">{{ total_votes }}</h1>
+                    <p class="text-muted">Total votes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Results Chart -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Vote Distribution</h5>
+        </div>
+        <div class="card-body">
+            {% if results %}
+                {% for result in results %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>
+                            <strong>{{ result.candidate.name }}</strong>
+                            {% if result.candidate.party %}
+                                <span class="text-muted">({{ result.candidate.party }})</span>
+                            {% endif %}
+                        </span>
+                        <span>
+                            <strong>{{ result.vote_count }}</strong> votes
+                            {% if total_votes > 0 %}
+                                ({{ "%.1f"|format((result.vote_count / total_votes * 100)) }}%)
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-{{ ['primary', 'success', 'info', 'warning', 'danger'][loop.index0 % 5] }}" 
+                             role="progressbar" 
+                             style="width: {{ (result.vote_count / total_votes * 100) if total_votes > 0 else 0 }}%">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-muted py-4">
+                    <i class="bi bi-info-circle"></i> No candidates or votes yet.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Detailed Results Table -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Detailed Results</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Party</th>
+                            <th>Votes</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in results %}
+                        <tr>
+                            <td>
+                                <strong>{{ result.candidate.name }}</strong>
+                                {% if loop.first and result.vote_count > 0 %}
+                                    <span class="badge bg-warning text-dark ms-2">
+                                        <i class="bi bi-trophy"></i> Leading
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ result.candidate.party or 'Independent' }}</td>
+                            <td>{{ result.vote_count }}</td>
+                            <td>
+                                {% if total_votes > 0 %}
+                                    {{ "%.2f"|format(result.vote_count / total_votes * 100) }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No results available</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

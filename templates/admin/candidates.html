@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Candidates - Online Voting System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-people"></i> Manage Candidates
+        </h2>
+        <a href="{{ url_for('admin.add_candidate') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Candidate
+        </a>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Party</th>
+                            <th>Status</th>
+                            <th>Votes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for candidate in candidates %}
+                        <tr>
+                            <td>{{ candidate.id }}</td>
+                            <td>{{ candidate.name }}</td>
+                            <td>{{ candidate.party or 'Independent' }}</td>
+                            <td>
+                                {% if candidate.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set vote_count = candidate.votes|length %}
+                                {{ vote_count }}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('admin.toggle_candidate', id=candidate.id) }}" 
+                                       class="btn btn-sm {{ 'btn-warning' if candidate.is_active else 'btn-success' }}">
+                                        <i class="bi {{ 'bi-pause-circle' if candidate.is_active else 'bi-play-circle' }}"></i>
+                                        {{ 'Deactivate' if candidate.is_active else 'Activate' }}
+                                    </a>
+                                    <a href="{{ url_for('admin.delete_candidate', id=candidate.id) }}" 
+                                       class="btn btn-sm btn-danger"
+                                       data-confirm="Are you sure you want to delete {{ candidate.name }}?">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                No candidates found. <a href="{{ url_for('admin.add_candidate') }}">Add one now</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

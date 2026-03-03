@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Email - Online Voting System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm mt-5">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i class="bi bi-envelope-exclamation display-1 text-warning"></i>
+                    </div>
+                    
+                    <h3 class="mb-3">Email Verification Required</h3>
+                    
+                    <p class="text-muted mb-4">
+                        Your account has been created but requires email verification before you can vote.
+                    </p>
+                    
+                    <p class="text-muted">
+                        We've sent a verification link to: <strong>{{ current_user.email }}</strong>
+                    </p>
+                    
+                    <form method="POST" action="{{ url_for('auth.resend_verification') }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Resend Verification Email
+                        </button>
+                    </form>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <a href="{{ url_for('auth.logout') }}" class="text-muted">
+                            <i class="bi bi-box-arrow-left"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

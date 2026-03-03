@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Election Settings - Online Voting System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">
+        <i class="bi bi-gear"></i> Election Settings
+    </h2>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Configure Election</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Election Name</label>
+                            <input type="text" name="election_name" class="form-control" 
+                                   value="{{ election.election_name if election else '' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="election_description" class="form-control" rows="3">{{ election.election_description if election and election.election_description else '' }}</textarea>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Start Date</label>
+                                <input type="datetime-local" name="start_date" class="form-control" 
+                                       value="{{ election.start_date.strftime('%Y-%m-%dT%H:%M') if election and election.start_date else '' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">End Date</label>
+                                <input type="datetime-local" name="end_date" class="form-control" 
+                                       value="{{ election.end_date.strftime('%Y-%m-%dT%H:%M') if election and election.end_date else '' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="is_active" class="form-check-input" id="is_active" 
+                                   {{ 'checked' if election and election.is_active else '' }}>
+                            <label class="form-check-label" for="is_active">
+                                Election is Active
+                            </label>
+                            <div class="form-text">
+                                When active, voters can cast their votes. Make sure to add candidates before activating.
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save Settings
+                            </button>
+                            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
