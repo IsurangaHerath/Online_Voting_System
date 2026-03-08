@@ -1,50 +1,17 @@
-"""
-==============================================================================
-Authentication Routes
-==============================================================================
-This file contains all authentication-related routes including:
-- User registration
-- User login
-- User logout
-- Email verification
-- JWT token generation
-
-Routes:
-    /auth/register - User registration
-    /auth/login - User login
-    /auth/logout - User logout
-    /auth/verify/<token> - Email verification
-    /auth/unverified - Unverified account page
-    /auth/resend-verification - Resend verification email
-    /auth/api/login - API login for JWT token
-==============================================================================
-"""
-
 import secrets
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+
 from app import db, User, Vote, send_verification_email, encrypt_vote
 from app import RegistrationForm, LoginForm
-from functools import wraps
 
-# Create authentication blueprint
 auth_bp = Blueprint('auth', __name__)
 
 
-# =============================================================================
-# Routes
-# =============================================================================
-
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    """
-    User registration route.
-    
-    GET: Display registration form
-    POST: Process registration and create new user
-    """
-    # Redirect if already logged in
+    """User registration."""
     if current_user.is_authenticated:
         if current_user.is_admin():
             return redirect(url_for('admin.dashboard'))
@@ -54,7 +21,6 @@ def register():
     
     if request.method == 'POST' and form.validate_on_submit():
         try:
-            # Create new user
             user = User(
                 username=form.username.data,
                 email=form.email.data,
@@ -67,12 +33,10 @@ def register():
             db.session.add(user)
             db.session.commit()
             
-            # Send verification email
             try:
                 send_verification_email(user)
                 flash('Registration successful! Please check your email to verify your account.', 'success')
             except Exception as e:
-                # Log the error but don't fail registration
                 current_app.logger.error(f'Failed to send verification email: {e}')
                 flash('Registration successful! However, we could not send the verification email. Please contact support.', 'warning')
             
@@ -94,13 +58,7 @@ def register_success():
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """
-    User login route.
-    
-    GET: Display login form
-    POST: Process login credentials
-    """
-    # Redirect if already logged in
+    """User login."""
     if current_user.is_authenticated:
         if current_user.is_admin():
             return redirect(url_for('admin.dashboard'))
@@ -112,14 +70,12 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         
         if user and user.check_password(form.password.data):
-            # Check if user is verified
             if not user.is_verified:
                 flash('Please verify your email before logging in.', 'warning')
                 return redirect(url_for('auth.login'))
             
             login_user(user)
             
-            # Redirect based on role
             next_page = request.args.get('next')
             if next_page:
                 return redirect(next_page)
@@ -136,7 +92,7 @@ def login():
 @auth_bp.route('/logout')
 @login_required
 def logout():
-    """User logout route."""
+    """User logout."""
     logout_user()
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('auth.login'))
@@ -144,12 +100,7 @@ def logout():
 
 @auth_bp.route('/verify/<token>')
 def verify_email(token):
-    """
-    Email verification route.
-    
-    Args:
-        token: Verification token from email
-    """
+    """Email verification."""
     user = User.query.filter_by(verification_token=token).first()
     
     if not user:
@@ -203,23 +154,10 @@ def resend_verification():
     return redirect(url_for('auth.unverified'))
 
 
-# =============================================================================
 # API Routes (JWT Authentication)
-# =============================================================================
-
 @auth_bp.route('/api/login', methods=['POST'])
 def api_login():
-    """
-    API login route for JWT token generation.
-    
-    Request JSON:
-        email: User email
-        password: User password
-    
-    Response JSON:
-        access_token: JWT token
-        user: User information
-    """
+    """API login for JWT token generation."""
     data = request.get_json()
     
     if not data:
@@ -239,7 +177,6 @@ def api_login():
     if not user.is_verified:
         return jsonify({'error': 'Email not verified'}), 401
     
-    # Create JWT token
     access_token = create_access_token(
         identity=user.id,
         additional_claims={'role': user.role, 'username': user.username}
@@ -253,18 +190,7 @@ def api_login():
 
 @auth_bp.route('/api/register', methods=['POST'])
 def api_register():
-    """
-    API registration route.
-    
-    Request JSON:
-        username: Desired username
-        email: User email
-        password: User password
-    
-    Response JSON:
-        message: Success message
-        user: Created user information
-    """
+    """API registration."""
     data = request.get_json()
     
     if not data:
@@ -277,7 +203,6 @@ def api_register():
     if not username or not email or not password:
         return jsonify({'error': 'Username, email, and password are required'}), 400
     
-    # Check if user exists
     if User.query.filter_by(username=username).first():
         return jsonify({'error': 'Username already exists'}), 400
     
@@ -320,14 +245,10 @@ def api_me():
     return jsonify(user.to_dict()), 200
 
 
-# =============================================================================
-# Protected API Routes Example
-# =============================================================================
-
 @auth_bp.route('/api/protected', methods=['GET'])
 @jwt_required()
 def api_protected():
-    """Example of a protected API route."""
+    """Example protected API route."""
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
     

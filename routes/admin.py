@@ -1,59 +1,27 @@
-"""
-==============================================================================
-Admin Routes
-==============================================================================
-This file contains all admin-related routes for the Online Voting System.
-Only users with 'admin' role can access these routes.
-
-Routes:
-    /admin/dashboard - Admin dashboard
-    /admin/add-candidate - Add new candidate
-    /admin/view-voters - View all registered voters
-    /admin/results - View voting results
-    /admin/delete-candidate/<id> - Delete candidate
-    /admin/toggle-candidate/<id> - Toggle candidate status
-    /admin/election-settings - Configure election settings
-==============================================================================
-"""
-
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
+
 from app import db, User, Candidate, Vote, ElectionSettings
 from app import CandidateForm
 from app import admin_required
 from datetime import datetime
 
-# Create admin blueprint
 admin_bp = Blueprint('admin', __name__)
 
-
-# =============================================================================
-# Routes
-# =============================================================================
 
 @admin_bp.route('/dashboard')
 @login_required
 @admin_required
 def dashboard():
-    """
-    Admin dashboard route.
-    
-    Displays:
-        - Total voters count
-        - Total candidates count
-        - Total votes cast
-        - Recent registrations
-    """
+    """Admin dashboard with voting statistics."""
     total_voters = User.query.filter_by(role='voter').count()
     verified_voters = User.query.filter_by(role='voter', is_verified=True).count()
     total_candidates = Candidate.query.count()
     active_candidates = Candidate.query.filter_by(is_active=True).count()
     total_votes = Vote.query.count()
     
-    # Get election settings
     election = ElectionSettings.query.first()
     
-    # Get recent voters
     recent_voters = User.query.filter_by(role='voter').order_by(
         User.created_at.desc()
     ).limit(5).all()
@@ -74,12 +42,7 @@ def dashboard():
 @login_required
 @admin_required
 def add_candidate():
-    """
-    Add new candidate route.
-    
-    GET: Display candidate form
-    POST: Process and save new candidate
-    """
+    """Add new candidate."""
     form = CandidateForm()
     
     if request.method == 'POST' and form.validate_on_submit():
@@ -119,12 +82,7 @@ def view_candidates():
 @login_required
 @admin_required
 def delete_candidate(id):
-    """
-    Delete a candidate.
-    
-    Args:
-        id: Candidate ID to delete
-    """
+    """Delete a candidate."""
     candidate = Candidate.query.get_or_404(id)
     
     try:
@@ -143,12 +101,7 @@ def delete_candidate(id):
 @login_required
 @admin_required
 def toggle_candidate(id):
-    """
-    Toggle candidate active status.
-    
-    Args:
-        id: Candidate ID to toggle
-    """
+    """Toggle candidate active status."""
     candidate = Candidate.query.get_or_404(id)
     
     try:
@@ -170,7 +123,6 @@ def toggle_candidate(id):
 @admin_required
 def view_voters():
     """View all registered voters."""
-    # Get filter parameters
     verified = request.args.get('verified')
     search = request.args.get('search')
     
@@ -208,7 +160,6 @@ def view_voter_detail(id):
 @admin_required
 def results():
     """View voting results."""
-    # Get all active candidates with vote counts
     candidates = Candidate.query.filter_by(is_active=True).all()
     
     results = []
@@ -219,13 +170,9 @@ def results():
             'vote_count': vote_count
         })
     
-    # Sort by vote count
     results.sort(key=lambda x: x['vote_count'], reverse=True)
     
-    # Get total votes
     total_votes = Vote.query.count()
-    
-    # Get election settings
     election = ElectionSettings.query.first()
     
     return render_template(
@@ -273,10 +220,7 @@ def election_settings():
     return render_template('admin/election_settings.html', election=election)
 
 
-# =============================================================================
 # API Routes
-# =============================================================================
-
 @admin_bp.route('/api/results')
 @login_required
 @admin_required
